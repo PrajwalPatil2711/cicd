@@ -1,0 +1,147 @@
+name: CI/CD Pipeline for Data Engineering
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black
+
+      - name: Lint with flake8
+        run: |
+          flake8 .
+
+      - name: Format with black
+        run: |
+          black --check .
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          pytest
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run integration tests
+        run: |
+          pytest tests/integration
+
+  build:
+    runs-on: ubuntu-latest
+    needs: integration-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-data-engineering-project .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to Cloud
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker tag my-data-engineering-project:latest my-docker-repo/my-data-engineering-project:latest
+          docker push my-docker-repo/my-data-engineering-project:latest
+
+  airflow:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Airflow
+        run: |
+          docker-compose up -d
+
+  dbt:
+    runs-on: ubuntu-latest
+    needs: airflow
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up dbt
+        run: |
+          pip install dbt
+
+      - name: Run dbt models
+        run: |
+          dbt run
+
+  spark:
+    runs-on: ubuntu-latest
+    needs: dbt
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Spark
+        run: |
+          wget https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz
+          tar xvf spark-3.1.2-bin-hadoop3.2.tgz
+          export SPARK_HOME=$(pwd)/spark-3.1.2-bin-hadoop3.2
+          export PATH=$SPARK_HOME/bin:$PATH
+
+      - name: Run Spark job
+        run: |
+          spark-submit --master local[4] jobs/spark_job.py

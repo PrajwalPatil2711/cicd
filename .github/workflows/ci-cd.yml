@@ -15,6 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: List directory contents
+        run: |
+          ls -la
+          ls -la cicd
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

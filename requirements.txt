@@ -4,7 +4,4 @@ flake8
 black
 dbt
 pyspark
-docker-compose
-flask==2.0.1
-requests==2.25.1
-pandas==1.3.3
+

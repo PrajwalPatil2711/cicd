@@ -102,8 +102,8 @@ jobs:
 
       - name: Deploy to Cloud
         run: |
-          docker tag cicd:latest my-docker-repo/cicd:latest
-          docker push my-docker-repo/cicd:latest
+          docker tag cicd:latest prajwal2711/my-docker-repo:latest
+          docker push prajwal2711/my-docker-repo:latest
 
   airflow:
     runs-on: ubuntu-latest

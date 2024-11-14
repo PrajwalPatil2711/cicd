@@ -15,11 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: List directory contents
-        run: |
-          ls -la
-          ls -la cicd
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -57,7 +52,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest cicd/tests
+          pytest
 
   integration-test:
     runs-on: ubuntu-latest
@@ -78,7 +73,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          pytest cicd/tests/integration
+          pytest tests/integration
 
   build:
     runs-on: ubuntu-latest
@@ -89,7 +84,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t cicd cicd
+          docker build -t cicd .
 
   deploy:
     runs-on: ubuntu-latest
@@ -103,6 +98,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          #adding secrets here from github secrets
 
       - name: Deploy to Cloud
         run: |
@@ -118,7 +114,6 @@ jobs:
 
       - name: Set up Airflow
         run: |
-          cd cicd
           docker-compose up -d
 
   dbt:
@@ -134,7 +129,6 @@ jobs:
 
       - name: Run dbt models
         run: |
-          cd cicd
           dbt run
 
   spark:
@@ -151,6 +145,7 @@ jobs:
           export SPARK_HOME=$(pwd)/spark-3.1.2-bin-hadoop3.2
           export PATH=$SPARK_HOME/bin:$PATH
 
+
       - name: Run Spark job
         run: |
-          spark-submit --master local[4] cicd/jobs/spark_job.py
+          spark-submit --master local[4] jobs/spark_job.py

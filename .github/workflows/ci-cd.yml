@@ -32,11 +32,11 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 cicd
+          flake8 .
 
       - name: Format with black
         run: |
-          black --check cicd
+          black --check .
 
   test:
     runs-on: ubuntu-latest

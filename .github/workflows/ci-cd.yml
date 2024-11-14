@@ -27,11 +27,11 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 .
+          flake8 cicd
 
       - name: Format with black
         run: |
-          black --check .
+          black --check cicd
 
   test:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest cicd/tests
 
   integration-test:
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          pytest tests/integration
+          pytest cicd/tests/integration
 
   build:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t my-data-engineering-project .
+          docker build -t cicd cicd
 
   deploy:
     runs-on: ubuntu-latest
@@ -98,11 +98,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          #adding secrets here from github secrets
+
       - name: Deploy to Cloud
         run: |
-          docker tag my-data-engineering-project:latest my-docker-repo/my-data-engineering-project:latest
-          docker push my-docker-repo/my-data-engineering-project:latest
+          docker tag cicd:latest my-docker-repo/cicd:latest
+          docker push my-docker-repo/cicd:latest
 
   airflow:
     runs-on: ubuntu-latest
@@ -113,6 +113,7 @@ jobs:
 
       - name: Set up Airflow
         run: |
+          cd cicd
           docker-compose up -d
 
   dbt:
@@ -128,6 +129,7 @@ jobs:
 
       - name: Run dbt models
         run: |
+          cd cicd
           dbt run
 
   spark:
@@ -146,4 +148,4 @@ jobs:
 
       - name: Run Spark job
         run: |
-          spark-submit --master local[4] jobs/spark_job.py
+          spark-submit --master local[4] cicd/jobs/spark_job.py

@@ -100,10 +100,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           #adding secrets here from github secrets
 
-      - name: Deploy to Cloud
-        run: |
-          docker tag cicd:latest prajwal2711/my-docker-repo:latest
-          docker push prajwal2711/my-docker-repo:latest
+      # - name: Deploy to Cloud
+      #   run: |
+      #     docker tag cicd:latest prajwal2711/my-docker-repo:latest
+      #     docker push prajwal2711/my-docker-repo:latest
 
   airflow:
     runs-on: ubuntu-latest
